@@ -1,9 +1,12 @@
-
-use strict;
-use warnings;
+# This code is part of distribution Mail-Box-POP3.  Meta-POD processed with
+# OODoc into POD and HTML manual-pages.  See README.md
+# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
 
 package Mail::Transport::POP3;
 use base 'Mail::Transport::Receive';
+
+use strict;
+use warnings;
 
 use IO::Socket  ();
 use Socket      qw/$CRLF/;
@@ -414,7 +417,7 @@ No username and/or no password specified for this POP3 folder, although
 these are obligatory parts in the protocol.
 
 =error Cannot connect to $host:$port for POP3: $!
-Unsuccesful in connecting to the remote POP3 server.
+Unsuccessful in connecting to the remote POP3 server.
 
 =error Server at $host:$port does not seem to be talking POP3.
 The remote server did not respond to an initial exchange of messages as is

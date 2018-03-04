@@ -1,6 +1,7 @@
 ChangeLog
 MANIFEST
 Makefile.PL
+README.md
 lib/Mail/Box/POP3.pm
 lib/Mail/Box/POP3/Message.pm
 lib/Mail/Box/POP3/Test.pm
@@ -15,3 +16,4 @@ t/original/0002
 t/original/0003
 t/original/0004
 t/server
+xt/99pod.t

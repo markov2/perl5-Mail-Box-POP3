@@ -1,3 +1,6 @@
+# This code is part of distribution Mail-Box-POP3.  Meta-POD processed with
+# OODoc into POD and HTML manual-pages.  See README.md
+# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
 
 package Mail::Box::POP3s;
 use base 'Mail::Box::POP3';

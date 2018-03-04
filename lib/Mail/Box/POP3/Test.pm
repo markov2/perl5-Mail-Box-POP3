@@ -1,18 +1,19 @@
-use strict;
+# This code is part of distribution Mail-Box-POP3.  Meta-POD processed with
+# OODoc into POD and HTML manual-pages.  See README.md
+# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
 
 package Mail::Box::POP3::Test;
 use base 'Exporter';
+
+use strict;
+use warnings;
 
 use Mail::Transport::POP3;
 
 use List::Util 'first';
 use File::Spec;
 
-
-our @EXPORT =
-  qw/
-     start_pop3_server start_pop3_client
-    /;
+our @EXPORT = qw/start_pop3_server start_pop3_client/;
 
 #
 # Start POP3 server for tests
