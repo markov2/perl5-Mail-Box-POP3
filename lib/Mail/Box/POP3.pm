@@ -74,8 +74,9 @@ which is passed must extend M<Mail::Transport::POP3>.
 sub init($)
 {   my ($self, $args) = @_;
 
-    $args->{server_port} ||= 110;
-    $args->{folder}      ||= 'inbox';
+    $args->{server_port}  ||= 110;
+    $args->{folder}       ||= 'inbox';
+    $args->{message_type} ||= 'Mail::Box::POP3::Message';
 
     $self->SUPER::init($args);
 

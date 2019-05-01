@@ -26,13 +26,11 @@ This module mainly extends M<Mail::Box::POP3>.
 =c_method new %options
 
 =default server_port  995
-=default message_type M<Mail::Box::POP3::Message>
 =cut
 
 sub init($)
 {   my ($self, $args) = @_;
     $args->{server_port} ||= 995;
-    $args->{message_type} = 'Mail::Box::POP3::Message';
     $self->SUPER::init($args);
     $self;
 }
