@@ -75,7 +75,15 @@ sub init($)
 }
 
 #------------------------------------------
+=section Attributes
 
+=method useSSL
+Returns C<true> when SSL must be used.
+=cut
+
+sub useSSL() { shift->{MTP_ssl} }
+
+#------------------------------------------
 =section Receiving mail
 
 =section Exchanging information
@@ -447,7 +455,7 @@ sub login(;$)
         return;
     }
 
-    my $net    = $self->{MTP_ssl} ? 'IO::Socket::SSL' : 'IO::Socket::INET';
+    my $net    = $self->useSSL ? 'IO::Socket::SSL' : 'IO::Socket::INET';
     eval "require $net" or die $@;
 
     my $socket = eval { $net->new("$host:$port") };
@@ -584,7 +592,8 @@ Represent this pop3 connection as URL.
 
 sub url(;$)
 {   my ($host, $port, $user, $pwd) = shift->remoteHost;
-    "pop3://$user:$pwd\@$host:$port";
+    my $proto = $self->useSSL ? 'pop3s' : 'pop3';
+    "$proto://$user:$pwd\@$host:$port";
 }
 
 #------------------------------------------
