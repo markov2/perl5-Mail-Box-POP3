@@ -591,7 +591,8 @@ Represent this pop3 connection as URL.
 =cut
 
 sub url(;$)
-{   my ($host, $port, $user, $pwd) = shift->remoteHost;
+{   my $self = shift;
+    my ($host, $port, $user, $pwd) = $self->remoteHost;
     my $proto = $self->useSSL ? 'pop3s' : 'pop3';
     "$proto://$user:$pwd\@$host:$port";
 }
