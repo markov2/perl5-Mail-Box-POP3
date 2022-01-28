@@ -60,6 +60,12 @@ if that fails LOGIN.
 You may want to specify your own pop-client object.  The object
 which is passed must extend M<Mail::Transport::POP3>.
 
+=option  use_ssl BOOLEAN
+=default use_ssl <false>
+
+=option  ssl_options HASH
+=default ssl_options <undef>
+
 =examples
 
  my $url = 'pop3://user:password@pop.xs4all.nl'
@@ -80,8 +86,10 @@ sub init($)
 
     $self->SUPER::init($args);
 
-    $self->{MBP_client}    = $args->{pop_client}; 
-    $self->{MBP_auth}      = $args->{authenticate} || 'AUTO';
+    $self->{MBP_client}   = $args->{pop_client}; 
+    $self->{MBP_auth}     = $args->{authenticate} || 'AUTO';
+    $self->{MBP_use_ssl}  = $args->{use_ssl} || 0;
+    $self->{MBP_ssl_opts} = $args->{ssl_options};
 
     $self;
 }
@@ -204,7 +212,10 @@ sub update() {shift->notImplemented}
 Returns the pop client object.  This does not establish the connection.
 
 =option  use_ssl BOOLEAN
-=default use_ssl <false>
+=default use_ssl <from new(use_ssl)>
+
+=option  ssl_options HASH
+=default ssl_options <from new(ssl_options)>
 
 =error Cannot create POP3 client for $name.
 The connection to the POP3 server cannot be established.  You may see
@@ -226,7 +237,8 @@ sub popClient(%)
       , hostname     => $self->{MBN_hostname}
       , port         => $self->{MBN_port}
       , authenticate => $self->{MBP_auth}
-      , use_ssl      => $args{use_ssl}
+      , use_ssl      => $args{use_ssl} || $self->{MBP_use_ssl}
+      , ssl_options  => $args{ssl_options} || $self->{MBP_ssl_opts}
       );
 
     $self->log(ERROR => "Cannot create POP3 client for $self.")

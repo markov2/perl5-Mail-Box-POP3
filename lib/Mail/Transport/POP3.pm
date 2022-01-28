@@ -8,7 +8,9 @@ use base 'Mail::Transport::Receive';
 use strict;
 use warnings;
 
-use IO::Socket  ();
+use IO::Socket       ();
+use IO::Socket::INET ();
+use IO::Socket::SSL  qw(SSL_VERIFY_NONE);
 use Socket      qw/$CRLF/;
 use Digest::MD5 qw/md5_hex/;
 
@@ -53,9 +55,15 @@ used, first APOP is tried, and then LOGIN.
 
 =option  use_ssl BOOLEAN
 =default use_ssl <false>
-To set the SSL parameters, use M<IO::Socket::SSL::set_defaults()>.  Connections
-will get restarted when they are lost: you have to keep the defaults in place
-during POP actions.
+
+=option  ssl_options HASH
+=default ssl_options <undef>
+Unless overruled, C<verify_hostname> will be set to false and
+C<SSL_verify_mode> to C<SSL_VERIFY_NONE}>
+
+You can also set the SSL parameters via M<IO::Socket::SSL::set_defaults()>.
+Connections will get restarted when they are lost: you have to keep the
+defaults in place during POP actions.
 =cut
 
 sub _OK($) { substr(shift // '', 0, 3) eq '+OK' }
@@ -67,8 +75,13 @@ sub init($)
 
     $self->SUPER::init($args) or return;
 
-    $self->{MTP_auth}   = $args->{authenticate} || 'AUTO';
-    $self->{MTP_ssl}    = $args->{use_ssl};
+    $self->{MTP_auth}     = $args->{authenticate} || 'AUTO';
+    $self->{MTP_ssl}      = $args->{use_ssl};
+
+    my $opts = $self->{MTP_ssl_opts} = $args->{ssl_options} || {};
+    $opts->{verify_hostname} ||= 0;
+    $opts->{SSL_verify_mode} ||= SSL_VERIFY_NONE;
+
     $self->socket or return;   # establish connection
 
     $self;
@@ -82,6 +95,11 @@ Returns C<true> when SSL must be used.
 =cut
 
 sub useSSL() { shift->{MTP_ssl} }
+
+=method SSLOptions
+=cut
+
+sub SSLOptions() { shift->{MTP_ssl_opts} }
 
 #------------------------------------------
 =section Receiving mail
@@ -455,10 +473,15 @@ sub login(;$)
         return;
     }
 
-    my $net    = $self->useSSL ? 'IO::Socket::SSL' : 'IO::Socket::INET';
-    eval "require $net" or die $@;
+    my $socket;
+    if($self->useSSL)
+    {   my $opts = $self->SSLOptions;
+        $socket  = eval { IO::Socket::SSL->new(PeerAddr => "$host:$port", %$opts) };
+    }
+    else
+    {   $socket  = eval { IO::Socket::INET->new("$host:$port") };
+    }
 
-    my $socket = eval { $net->new("$host:$port") };
     unless($socket)
     {   $self->log(ERROR => "Cannot connect to $host:$port for POP3: $!");
         return;
