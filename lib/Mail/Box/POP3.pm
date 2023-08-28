@@ -47,13 +47,17 @@ for user, password, pop-server and server-port.
 =default server_port  110
 =default message_type M<Mail::Box::POP3::Message>
 
-=option  authenticate 'LOGIN'|'APOP'|'AUTO'
+=option  authenticate 'LOGIN'|'APOP'|'AUTO'|'OUATH2'|'OAUTH2_SEP'
 =default authenticate C<'AUTO'>
 POP3 can use two methods of authentication: the old LOGIN protocol, which
 transmits a username and password in plain text, and the newer APOP
 protocol which uses MD5 encryption.  APOP is therefore much better, however
 not always supported by the server.  With AUTO, first APOP is tried and
 if that fails LOGIN.
+
+[3.006] OAUTH* requires the authorization token to be passed as Password.
+Microsoft Office365 needs C<OAUTH2_SEP>, where other oauth2 implementations
+use C<OAUTH2>.
 
 =option  pop_client OBJECT
 =default pop_client undef

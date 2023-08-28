@@ -11,8 +11,9 @@ use warnings;
 use IO::Socket       ();
 use IO::Socket::INET ();
 use IO::Socket::SSL  qw(SSL_VERIFY_NONE);
-use Socket      qw/$CRLF/;
-use Digest::MD5 qw/md5_hex/;
+use Socket           qw/$CRLF/;
+use Digest::MD5      qw/md5_hex/;
+use MIME::Base64     qw/encode_base64/;
 
 =chapter NAME
 
@@ -45,13 +46,17 @@ will return C<undef>.
 
 =default port C<110>
 
-=option  authenticate 'LOGIN'|'APOP'|'AUTO'
+=option  authenticate 'LOGIN'|'APOP'|'AUTO'|'OAUTH2'|'OAUTH2_SEP'
 =default authenticate C<'AUTO'>
 
 Authenthication method.  The standard defines two methods, named LOGIN and
 APOP.  The first sends the username and password in plain text to the server
 to get permission, the latter encrypts this data using MD5.  When AUTO is
 used, first APOP is tried, and then LOGIN.
+
+[3.006] OAUTH* requires the authorization token to be passed as Password.
+Microsoft Office365 needs C<OAUTH2_SEP>, where other oauth2 implementations
+use C<OAUTH2>.
 
 =option  use_ssl BOOLEAN
 =default use_ssl <false>
@@ -519,6 +524,32 @@ sub login(;$)
                    or return;
                 $connected = _OK $response2;
             }
+        }
+    }
+
+    # Try OAUTH2 login
+    if(! $connected && $authenticate =~ /^OAUTH2/)
+    {   # Borrowed from Net::POP3::XOAuth2 0.0.2 by Kizashi Nagata (also Perl license)
+        my $token = encode_base64 "user=$username\001auth=Bearer $password\001\001";
+        $token    =~ s/[\r\n]//g;    # no base64 newlines, anywhere
+
+		if($authenticate eq 'OAUTH2_SEP')
+        {   # Microsofts way
+            # https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth
+            my $response = $self->send($socket, "AUTH XOAUTH2$CRLF")
+               or return;
+
+            if($response =~ /^\+/)   # Office365 sends + here, not +OK
+            {   my $response2 = $self->send($socket, "$token$CRLF")
+                   or return;
+                $connected = _OK $response2;
+            }
+        }
+        else
+        {   my $response = $self->send($socket, "AUTH XOAUTH2 $token$CRLF")
+               or return;
+
+            $connected = _OK $response;
         }
     }
 
