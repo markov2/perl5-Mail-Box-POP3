@@ -9,7 +9,7 @@ version 3.006: Mon 28 Aug 13:35:25 CEST 2023
 	- Mail::Box::POP3 and Mail::Transport::POP3 can set SSL during
 	  construction.
 	  rt.cpan.org#140896 [Yanyan Yang]
-	- Add OUATH2 verification [Madha Prasad]
+	- Add OUATH2 verification [Medha Prasad]
 
 	Changes:
 	- Default SSL options disable verification.
