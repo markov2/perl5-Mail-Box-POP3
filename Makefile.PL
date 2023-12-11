@@ -12,6 +12,7 @@ my %prereq =
   , File::Basename   => 0
   , File::Spec       => 0
   , IO::Socket       => 0
+  , IO::Socket::IP   => 0
   , List::Util       => 0
   , Socket           => 0
   , Test::More       => 0

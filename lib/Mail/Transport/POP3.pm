@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 use IO::Socket       ();
-use IO::Socket::INET ();
+use IO::Socket::IP   ();
 use IO::Socket::SSL  qw(SSL_VERIFY_NONE);
 use Socket           qw/$CRLF/;
 use Digest::MD5      qw/md5_hex/;
@@ -484,7 +484,7 @@ sub login(;$)
         $socket  = eval { IO::Socket::SSL->new(PeerAddr => "$host:$port", %$opts) };
     }
     else
-    {   $socket  = eval { IO::Socket::INET->new("$host:$port") };
+    {   $socket  = eval { IO::Socket::IP->new("$host:$port") };
     }
 
     unless($socket)
