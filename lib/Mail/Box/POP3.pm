@@ -1,6 +1,7 @@
-# This code is part of distribution Mail-Box-POP3.  Meta-POD processed with
-# OODoc into POD and HTML manual-pages.  See README.md
-# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+#oodist: *** DO NOT USE THIS VERSION FOR PRODUCTION ***
+#oodist: This file contains OODoc-style documentation which will get stripped
+#oodist: during its release in the distribution.  You can use this file for
+#oodist: testing, however the code of this development version may be broken!
 
 package Mail::Box::POP3;
 use base 'Mail::Box::Net';
@@ -16,20 +17,21 @@ use File::Spec;
 use File::Basename;
 use Carp;
 
+#--------------------
 =chapter NAME
 
 Mail::Box::POP3 - handle POP3 folders as client
 
 =chapter SYNOPSIS
 
- use Mail::Box::POP3;
- my $folder = Mail::Box::POP3->new(folder => $ENV{MAIL}, ...);
+  use Mail::Box::POP3;
+  my $folder = Mail::Box::POP3->new(folder => $ENV{MAIL}, ...);
 
 =chapter DESCRIPTION
 
 Maintain a folder which has its messages stored on a remote server.  The
 communication between the client application and the server is implemented
-using the POP3 protocol.  This class uses M<Mail::Transport::POP3> to
+using the POP3 protocol.  This class uses Mail::Transport::POP3 to
 hide the transport of information, and focusses solely on the correct
 handling of messages within a POP3 folder.
 
@@ -45,7 +47,7 @@ for user, password, pop-server and server-port.
 =default create <not applicable>
 
 =default server_port  110
-=default message_type M<Mail::Box::POP3::Message>
+=default message_type Mail::Box::POP3::Message
 
 =option  authenticate 'LOGIN'|'APOP'|'AUTO'|'OUATH2'|'OAUTH2_SEP'
 =default authenticate C<'AUTO'>
@@ -62,7 +64,7 @@ use C<OAUTH2>.
 =option  pop_client OBJECT
 =default pop_client undef
 You may want to specify your own pop-client object.  The object
-which is passed must extend M<Mail::Transport::POP3>.
+which is passed must extend Mail::Transport::POP3.
 
 =option  use_ssl BOOLEAN
 =default use_ssl <false>
@@ -72,46 +74,46 @@ which is passed must extend M<Mail::Transport::POP3>.
 
 =examples
 
- my $url = 'pop3://user:password@pop.xs4all.nl'
- my $pop = Mail::Box::POP3->new($url);
+  my $url = 'pop3://user:password@pop.xs4all.nl'
+  my $pop = Mail::Box::POP3->new($url);
 
- my $pop = $mgr->open(type => 'pop3',
-    username => 'myname', password => 'mypassword',
-    server_name => 'pop.xs4all.nl');
+  my $pop = $mgr->open(type => 'pop3',
+     username => 'myname', password => 'mypassword',
+     server_name => 'pop.xs4all.nl'
+  );
 
 =cut
 
 sub init($)
-{   my ($self, $args) = @_;
+{	my ($self, $args) = @_;
 
-    $args->{server_port}  ||= 110;
-    $args->{folder}       ||= 'inbox';
-    $args->{message_type} ||= 'Mail::Box::POP3::Message';
+	$args->{server_port}  ||= 110;
+	$args->{folder}       ||= 'inbox';
+	$args->{message_type} ||= 'Mail::Box::POP3::Message';
 
-    $self->SUPER::init($args);
+	$self->SUPER::init($args);
 
-    $self->{MBP_client}   = $args->{pop_client}; 
-    $self->{MBP_auth}     = $args->{authenticate} || 'AUTO';
-    $self->{MBP_use_ssl}  = $args->{use_ssl} || 0;
-    $self->{MBP_ssl_opts} = $args->{ssl_options};
-
-    $self;
+	$self->{MBP_client}   = $args->{pop_client};
+	$self->{MBP_auth}     = $args->{authenticate} || 'AUTO';
+	$self->{MBP_use_ssl}  = $args->{use_ssl} || 0;
+	$self->{MBP_ssl_opts} = $args->{ssl_options};
+	$self;
 }
 
 =ci_method create $folder, %options
 It is not possible to create a new folder on a POP3 server.  This method
-will always return C<false>.
+will always return false.
 =cut
 
 sub create($@) { undef }         # fails
 
 sub foundIn(@)
-{   my $self = shift;
-    unshift @_, 'folder' if @_ % 2;
-    my %options = @_;
+{	my $self = shift;
+	unshift @_, 'folder' if @_ % 2;
+	my %args = @_;
 
-       (exists $options{type}   && lc $options{type} eq 'pop3')
-    || (exists $options{folder} && $options{folder} =~ m/^pop/);
+	   (exists $args{type}   && lc $args{type} eq 'pop3')
+	|| (exists $args{folder} && $args{folder} =~ m/^pop/);
 }
 
 =method addMessage $message
@@ -119,8 +121,8 @@ It is impossible to write messages to the average POP3 server.  There are
 extensions to the protocol which do permit it, however these are not
 implemented (yet, patches welcome).
 
-C<undef> is returned, and an error displayed.  However, no complaint is
-given when the $message is C<undef> itself.
+undef is returned, and an error displayed.  However, no complaint is
+given when the $message is undef itself.
 
 =error You cannot write a message to a pop server (yet)
 Some extensions to the POP3 protocol do permit writing messages to the server,
@@ -130,12 +132,12 @@ implementation with writing.
 =cut
 
 sub addMessage($)
-{   my ($self, $message) = @_;
+{	my ($self, $message) = @_;
 
-    $self->log(ERROR => "You cannot write a message to a pop server (yet)")
-       if defined $message;
+	$self->log(ERROR => "You cannot write a message to a pop server (yet)")
+		if defined $message;
 
-    undef;
+	undef;
 }
 
 =method addMessages $messages
@@ -144,26 +146,26 @@ is without any message.
 =cut
 
 sub addMessages(@)
-{   my $self = shift;
+{	my $self = shift;
 
-    # error message described in addMessage()
-    $self->log(ERROR => "You cannot write messages to a pop server (yet)")
-        if @_;
+	# error message described in addMessage()
+	$self->log(ERROR => "You cannot write messages to a pop server (yet)")
+		if @_;
 
-    ();
+	();
 }
 
 sub type() {'pop3'}
 
 sub close(@)
-{   my $self = shift;
+{	my $self = shift;
 
-    $self->SUPER::close(@_);
+	$self->SUPER::close(@_);
 
-    my $pop = delete $self->{MBP_client};
-    $pop->disconnect if defined $pop;
+	my $pop = delete $self->{MBP_client};
+	$pop->disconnect if defined $pop;
 
-    $self;
+	$self;
 }
 
 =method delete %options
@@ -180,9 +182,9 @@ deleted by the server's administrator only.
 =cut
 
 sub delete(@)
-{   my $self = shift;
-    $self->log(WARNING => "POP3 folders cannot be deleted.");
-    undef;
+{	my $self = shift;
+	$self->log(WARNING => "POP3 folders cannot be deleted.");
+	undef;
 }
 
 =ci_method listSubFolders %options
@@ -194,7 +196,7 @@ sub listSubFolders(@) { () }     # no
 
 =method openSubFolder %options
 It is not possible to open a sub-folder for a POP3 folder, because that
-is not supported by the official POP3 protocol. In any case, C<undef>
+is not supported by the official POP3 protocol. In any case, undef
 is returned to indicate a failure.
 =cut
 
@@ -206,10 +208,9 @@ sub topFolderWithMessages() { 1 }  # Yes: only top folder
 NOT IMPLEMENTED YET
 =cut
 
-sub update() {shift->notImplemented}
+sub update() { $_[0]->notImplemented }
 
-#-------------------------------------------
-
+#--------------------
 =section Internals
 
 =method popClient %options
@@ -227,86 +228,85 @@ more, related, error messages about the failure.
 =cut
 
 sub popClient(%)
-{   my ($self, %args) = @_;
+{	my ($self, %args) = @_;
 
-    return $self->{MBP_client}
-        if defined $self->{MBP_client};
+	return $self->{MBP_client}
+		if defined $self->{MBP_client};
 
-    my $auth = $self->{auth};
+	my $auth = $self->{auth};
 
-    require Mail::Transport::POP3;
-    my $client  = Mail::Transport::POP3->new
-      ( username     => $self->{MBN_username}
-      , password     => $self->{MBN_password}
-      , hostname     => $self->{MBN_hostname}
-      , port         => $self->{MBN_port}
-      , authenticate => $self->{MBP_auth}
-      , use_ssl      => $args{use_ssl} || $self->{MBP_use_ssl}
-      , ssl_options  => $args{ssl_options} || $self->{MBP_ssl_opts}
-      );
+	require Mail::Transport::POP3;
+	my $client  = Mail::Transport::POP3->new(
+		username     => $self->{MBN_username},
+		password     => $self->{MBN_password},
+		hostname     => $self->{MBN_hostname},
+		port         => $self->{MBN_port},
+		authenticate => $self->{MBP_auth},
+		use_ssl      => $args{use_ssl} || $self->{MBP_use_ssl},
+		ssl_options  => $args{ssl_options} || $self->{MBP_ssl_opts}
+	);
 
-    $self->log(ERROR => "Cannot create POP3 client for $self.")
-       unless defined $client;
+	$self->log(ERROR => "Cannot create POP3 client for $self.")
+		unless defined $client;
 
-    $self->{MBP_client} = $client;
+	$self->{MBP_client} = $client;
 }
 
 sub readMessages(@)
-{   my ($self, %args) = @_;
+{	my ($self, %args) = @_;
 
-    my $pop   = $self->popClient or return;
-    my @log   = $self->logSettings;
-    my $seqnr = 0;
+	my $pop   = $self->popClient or return;
+	my @log   = $self->logSettings;
+	my $seqnr = 0;
 
-    foreach my $id ($pop->ids)
-    {   my $message = $args{message_type}->new
-         ( head      => $args{head_delayed_type}->new(@log)
-         , unique    => $id
-         , folder    => $self
-         , seqnr     => $seqnr++
-         );
+	foreach my $id ($pop->ids)
+	{	my $message = $args{message_type}->new(
+			head      => $args{head_delayed_type}->new(@log),
+			unique    => $id,
+			folder    => $self,
+			seqnr     => $seqnr++
+		);
 
-        my $body    = $args{body_delayed_type}->new(@log, message => $message);
-        $message->storeBody($body);
+		my $body = $args{body_delayed_type}->new(@log, message => $message);
+		$message->storeBody($body);
+		$self->storeMessage($message);
+	}
 
-        $self->storeMessage($message);
-    }
-
-    $self;
+	$self;
 }
- 
+
 =method getHead $message
 Read the header for the specified message from the remote server.
 =cut
 
 sub getHead($)
-{   my ($self, $message) = @_;
-    my $pop   = $self->popClient or return;
+{	my ($self, $message) = @_;
+	my $pop   = $self->popClient or return;
 
-    my $uidl  = $message->unique;
-    my $lines = $pop->header($uidl);
+	my $uidl  = $message->unique;
+	my $lines = $pop->header($uidl);
 
-    unless(defined $lines)
-    {   $lines = [];
-        $self->log(WARNING  => "Message $uidl disappeared from POP3 server $self.");
-    }
+	unless(defined $lines)
+	{	$lines = [];
+		$self->log(WARNING  => "Message $uidl disappeared from POP3 server $self.");
+	}
 
-    my $text   = join '', @$lines;
-    my $parser = Mail::Box::Parser::Perl->new   # not parseable by C parser
-     ( filename  => "$pop"
-     , file      => Mail::Box::FastScalar->new(\$text)
-     , fix_headers => $self->{MB_fix_headers}
-     );
+	my $text   = join '', @$lines;
+	my $parser = Mail::Box::Parser::Perl->new(   # not parseable by C parser
+		filename  => "$pop",
+		file      => Mail::Box::FastScalar->new(\$text),
+		fix_headers => $self->{MB_fix_headers}
+	);
 
-    $self->lazyPermitted(1);
+	$self->lazyPermitted(1);
 
-    my $head     = $message->readHead($parser);
-    $parser->stop;
+	my $head   = $message->readHead($parser);
+	$parser->stop;
 
-    $self->lazyPermitted(0);
+	$self->lazyPermitted(0);
 
-    $self->log(PROGRESS => "Loaded head of $uidl.");
-    $head;
+	$self->log(PROGRESS => "Loaded head of $uidl.");
+	$head;
 }
 
 =method getHeadAndBody $message
@@ -328,40 +328,40 @@ and reading the body?
 =cut
 
 sub getHeadAndBody($)
-{   my ($self, $message) = @_;
-    my $pop   = $self->popClient or return;
+{	my ($self, $message) = @_;
+	my $pop   = $self->popClient or return;
 
-    my $uidl  = $message->unique;
-    my $lines = $pop->message($uidl);
+	my $uidl  = $message->unique;
+	my $lines = $pop->message($uidl);
 
-    unless(defined $lines)
-    {   $lines = [];
-        $self->log(WARNING  => "Message $uidl disappeared from POP3 server $self.");
-     }
+	unless(defined $lines)
+	{	$lines = [];
+		$self->log(WARNING  => "Message $uidl disappeared from POP3 server $self.");
+	}
 
-    my $parser = Mail::Box::Parser::Perl->new   # not parseable by C parser
-     ( filename  => "$pop"
-     , file      => IO::ScalarArray->new($lines)
-     );
+	my $parser = Mail::Box::Parser::Perl->new(   # not parseable by C parser
+		filename  => "$pop",
+		file      => IO::ScalarArray->new($lines)
+	);
 
-    my $head = $message->readHead($parser);
-    unless(defined $head)
-    {   $self->log(ERROR => "Cannot find head back for $uidl on POP3 server $self.");
-        $parser->stop;
-        return undef;
-    }
+	my $head = $message->readHead($parser);
+	unless(defined $head)
+	{	$self->log(ERROR => "Cannot find head back for $uidl on POP3 server $self.");
+		$parser->stop;
+		return undef;
+	}
 
-    my $body = $message->readBody($parser, $head);
-    unless(defined $body)
-    {   $self->log(ERROR => "Cannot read body for $uidl on POP3 server $self.");
-        $parser->stop;
-        return undef;
-    }
+	my $body = $message->readBody($parser, $head);
+	unless(defined $body)
+	{	$self->log(ERROR => "Cannot read body for $uidl on POP3 server $self.");
+		$parser->stop;
+		return undef;
+	}
 
-    $parser->stop;
+	$parser->stop;
 
-    $self->log(PROGRESS => "Loaded message $uidl.");
-    ($head, $body);
+	$self->log(PROGRESS => "Loaded message $uidl.");
+	($head, $body);
 }
 
 =method writeMessages %options
@@ -373,18 +373,16 @@ to the server.  Therefore, modifications may be lost.
 =cut
 
 sub writeMessages($@)
-{   my ($self, $args) = @_;
+{	my ($self, $args) = @_;
 
-    if(my $modifications = grep {$_->isModified} @{$args->{messages}})
-    {   $self->log(WARNING =>
-           "Update of $modifications messages ignored for POP3 folder $self.");
-    }
+	if(my $modifications = grep $_->isModified, @{$args->{messages}})
+	{	$self->log(WARNING => "Update of $modifications messages ignored for POP3 folder $self.");
+	}
 
-    $self;
+	$self;
 }
 
-#-------------------------------------------
-
+#--------------------
 =chapter DETAILS
 
 =section How POP3 folders work
@@ -401,7 +399,7 @@ some message status flags).
 
 =section This implementation
 
-The protocol specifics are implemented in M<Mail::Transport::POP3>,
+The protocol specifics are implemented in Mail::Transport::POP3,
 written by Liz Mattijsen.  That module does not use any of the
 other POP3 modules available on CPAN for the reason that MailBox
 tries to be smarter: it is capable of re-establishing broken POP3

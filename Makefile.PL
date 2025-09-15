@@ -2,26 +2,30 @@ use ExtUtils::MakeMaker;
 
 require 5.016;
 
-my $VERSION = '3.008';
+# Use command 'oodist' to produce your whole software release.
+my $version = '3.008';
+my $git      = "https://github.com/markov2/perl5-Mail-Box-POP3";
+my $publish  = "../public_html/mail-box-pop3";
+my $homepage = "http://perl.overmeer.net/CPAN/";
 
-my %prereq =
-  ( Carp             => 0
-  , Digest::MD5      => 0
-  , File::Basename   => 0
-  , File::Spec       => 0
-  , IO::Socket       => 0
-  , IO::Socket::IP   => 0
-  , List::Util       => 0
-  , Socket           => 0
-  , Test::More       => 0
+my %prereq = (
+	Carp             => 0,
+	Digest::MD5      => 0,
+	File::Basename   => 0,
+	File::Spec       => 0,
+	IO::Socket       => 0,
+	IO::Socket::IP   => 0,
+	List::Util       => 0,
+	Socket           => 0,
+	Test::More       => 0,
 
-  , Mail::Box::FastScalar         => 3
-  , Mail::Box::Net                => 3
-  , Mail::Box::Test               => 3
-  , Mail::Box::Parser::Perl       => 3
-  , Mail::Transport::Receive      => 3
-  , Mail::Reporter                => 3
-  );
+	Mail::Box::FastScalar         => 3,
+	Mail::Box::Net                => 3,
+	Mail::Box::Test               => 3,
+	Mail::Box::Parser::Perl       => 3,
+	Mail::Transport::Receive      => 3,
+	Mail::Reporter                => 3,
+);
 
 foreach my $module (sort keys %prereq)
 {   my $reqversion = $prereq{$module};
@@ -49,40 +53,81 @@ FIX
     exit 1;
 }
 
+my %oodist   = (
+	oodoc_version => 3.05,
+	first_year    => 2001,
+	email         => "markov\@cpan.org",
+
+	include  => [
+		'../Mail-Box',
+ 		'../Mail-Message',
+ 		'../Mail-Transport',
+	],
+
+	use      => [
+	],
+
+	parser   => {
+		syntax         => 'markov',
+		skip_links     => [
+		],
+		pmhead         => undef,
+	},
+
+	tests    => {
+	},
+
+	release  => {
+		publish        => "$publish/source",
+	},
+
+	raw      => {
+		publish        => "$publish/raw",
+	},
+
+	generate => [ {
+		# Add real pod to the releases
+		format         => 'pod3',
+		podtail        => undef,
+	  },
+ 	  # You may add HTML formatters here.
+ 		  # You may add exporter configurations here.
+	],
+);
+
 WriteMakefile
- ( NAME       => 'Mail::Box::POP3'
- , VERSION    => $VERSION
- , AUTHOR     => 'Mark Overmeer'
- , ABSTRACT   => 'Mail::Box connector via POP3'
- , PREREQ_PM  => \%prereq
- , LICENSE    => 'perl_5'
+	NAME       => 'Mail::Box::POP3',
+	VERSION    => $version,
+	AUTHOR     => 'Mark Overmeer',
+	ABSTRACT   => 'Mail::Box connector via POP3',
+	PREREQ_PM  => \%prereq,
+	LICENSE    => 'perl_5',
 
- , META_MERGE =>
-      { 'meta-spec' => { version => 2 }
-      , resources  =>
-          { repository =>
-              { type => 'git'
-              , url  => 'https://github.com/markov2/perl5-Mail-Box-POP3.git'
-              , web  => 'https://github.com/markov2/perl5-Mail-Box-POP3'
-              }
-          , homepage => 'http://perl.overmeer.net/CPAN/'
-          , license  => [ 'http://dev.perl.org/licenses/' ]
-          }
-      }
+	META_MERGE => {
+		'meta-spec' => { version => 2 },
+		resources   => {
+			repository => {
+				type => 'git',
+				url  => "$git.git",
+				web  => $git,
+			},
+			homepage => $homepage,
+			license  => [ 'http//dev.perl.org/licenses/' ],
+		},
+		prereqs => {
+			develop => {
+				requires => {
+					'OODoc' => '3.00',
+				}
+			},
+			test => {
+				requires => {
+					'Test::More' => 1.00,
+					'Test::Pod'  => 1.00,
+				}
+			},
+		},
 
- );
-
-### used by oodist during production of distribution
-sub MY::postamble { <<'__POSTAMBLE' }
-
-# for DIST
-RAWDIR          = ../public_html/mail-box-pop3/raw
-DISTDIR         = ../public_html/mail-box-pop3/source
-EXTENDS         = ../Mail-Message:../Mail-Transport:../Mail-Box
-
-# for POD
-FIRST_YEAR      = 2001
-EMAIL           = markov@cpan.org
-WEBSITE         = http://perl.overmeer.net/CPAN/
-
-__POSTAMBLE
+		# You may use multiple set-ups, see "oodist --make"
+		x_oodist => \%oodist,
+	};

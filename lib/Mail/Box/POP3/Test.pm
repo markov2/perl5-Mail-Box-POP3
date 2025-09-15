@@ -1,6 +1,7 @@
-# This code is part of distribution Mail-Box-POP3.  Meta-POD processed with
-# OODoc into POD and HTML manual-pages.  See README.md
-# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+#oodist: *** DO NOT USE THIS VERSION FOR PRODUCTION ***
+#oodist: This file contains OODoc-style documentation which will get stripped
+#oodist: during its release in the distribution.  You can use this file for
+#oodist: testing, however the code of this development version may be broken!
 
 package Mail::Box::POP3::Test;
 use base 'Exporter';
@@ -8,10 +9,10 @@ use base 'Exporter';
 use strict;
 use warnings;
 
-use Mail::Transport::POP3;
-
 use List::Util 'first';
-use File::Spec;
+use File::Spec ();
+
+use Mail::Transport::POP3 ();
 
 our @EXPORT = qw/start_pop3_server start_pop3_client/;
 
@@ -20,34 +21,30 @@ our @EXPORT = qw/start_pop3_server start_pop3_client/;
 #
 
 sub start_pop3_server($;$)
-{  my $popbox  = shift;
-   my $setting = shift || '';
+{	my $popbox  = shift;
+	my $setting = shift || '';
 
-   my $serverscript = File::Spec->catfile('t', 'server');
+	my $serverscript = File::Spec->catfile('t', 'server');
 
-   # Some complications to find-out $perl, which must be absolute and
-   # untainted for perl5.6.1, but not for the other Perl's.
-   my $perl   = $^X;
-   unless(File::Spec->file_name_is_absolute($perl))
-   {   my @path = split /\:|\;/, $ENV{PATH};
-       $perl    = first { -x $_ }
-                      map { File::Spec->catfile($_, $^X) }
-                           @path;
-   }
+	# Some complications to find-out $perl, which must be absolute and
+	# untainted for perl5.6.1, but not for the other Perl's.
+	my $perl   = $^X;
+	unless(File::Spec->file_name_is_absolute($perl))
+	{	my @path = split /\:|\;/, $ENV{PATH};
+		$perl    = first { -x $_ } map File::Spec->catfile($_, $^X), @path;
+	}
 
-   $perl =~ m/(.*)/;
-   $perl = $1;
+	$perl =~ m/(.*)/;
+	$perl = $1;
+	%ENV = ();
 
-   %ENV = ();
+	open my $server, "$perl $serverscript $popbox $setting|"
+		or die "Could not start POP3 server\n";
 
-   open(my $server, "$perl $serverscript $popbox $setting|")
-       or die "Could not start POP3 server\n";
+	my $line  = <$server>;
+	my $port  = $line =~ m/(\d+)/ ? $1 : die "Did not get port specification, but '$line'";
 
-   my $line  = <$server>;
-   my $port  = $line =~ m/(\d+)/ ? $1
-     : die "Did not get port specification, but '$line'";
-
-   ($server, $port);
+	($server, $port);
 }
 
 #
@@ -55,15 +52,15 @@ sub start_pop3_server($;$)
 #
 
 sub start_pop3_client($@)
-{   my ($port, @options) = @_;
-    
-    Mail::Transport::POP3->new
-     ( hostname => '127.0.0.1'
-     , port     => $port
-     , username => 'user'
-     , password => 'password'
-     , @options
-     );
+{	my ($port, @options) = @_;
+
+	Mail::Transport::POP3->new(
+		hostname => '127.0.0.1',
+		port     => $port,
+		username => 'user',
+		password => 'password',
+		@options,
+	);
 }
 
 1;
