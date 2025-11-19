@@ -9,6 +9,7 @@ version 3.008:
 	Improvements:
 	- add .gitignore
 	- converted to OODoc 3.04
+	- explicitly depend on Mail::Message v3, not 4
 
 version 3.007: Fri Apr 18 08:59:39 PM CEST 2025
 

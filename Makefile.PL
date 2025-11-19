@@ -2,56 +2,14 @@ use ExtUtils::MakeMaker;
 
 require 5.016;
 
+use warnings;
+use strict;
+
 # Use command 'oodist' to produce your whole software release.
 my $version = '3.008';
 my $git      = "https://github.com/markov2/perl5-Mail-Box-POP3";
 my $publish  = "../public_html/mail-box-pop3";
 my $homepage = "http://perl.overmeer.net/CPAN/";
-
-my %prereq = (
-	Carp             => 0,
-	Digest::MD5      => 0,
-	File::Basename   => 0,
-	File::Spec       => 0,
-	IO::Socket       => 0,
-	IO::Socket::IP   => 0,
-	List::Util       => 0,
-	Socket           => 0,
-	Test::More       => 0,
-
-	Mail::Box::FastScalar         => 3,
-	Mail::Box::Net                => 3,
-	Mail::Box::Test               => 3,
-	Mail::Box::Parser::Perl       => 3,
-	Mail::Transport::Receive      => 3,
-	Mail::Reporter                => 3,
-);
-
-foreach my $module (sort keys %prereq)
-{   my $reqversion = $prereq{$module};
-    eval "require $module";
-
-    if($@ && $@ =~ m/^Can't locate /)
-    {   print "    $module is not yet installed\n" }
-    elsif($@)
-    {   print "    $module produced an error:\n$@";
-        push @errors, $module;
-    }
-    elsif($module->VERSION < $reqversion)
-    {   print "    $module version ", $module->VERSION, " is outdated; requires $reqversion\n";
-    }
-    else
-    {   print "    $module version ", $module->VERSION, " is ok (required is $reqversion)\n";
-    }
-}
-
-if($errors)
-{   die <<'FIX';
-*** ERROR! You have to install @errors manually,
-*** before you can retry to install MailBox.
-FIX
-    exit 1;
-}
 
 my %oodist   = (
 	oodoc_version => 3.05,
@@ -95,12 +53,29 @@ my %oodist   = (
 	],
 );
 
+my %requires = (
+	'Carp'            => 0,
+	'Digest::MD5'     => 0,
+	'File::Basename'  => 0,
+	'File::Spec'      => 0,
+	'IO::Socket'      => 0,
+	'IO::Socket::IP'  => 0,
+	'List::Util'      => 0,
+	'Socket'          => 0,
+
+	'Mail::Box::FastScalar'        => '3, <4.0',
+	'Mail::Box::Net'               => '3, <4.0',
+	'Mail::Box::Test'              => '3, <4.0',
+	'Mail::Box::Parser::Perl'      => '3, <4.0',
+	'Mail::Transport::Receive'     => '3, <4.0',
+	'Mail::Reporter'               => '3, <4.0',
+);
+
 WriteMakefile
 	NAME       => 'Mail::Box::POP3',
 	VERSION    => $version,
 	AUTHOR     => 'Mark Overmeer',
 	ABSTRACT   => 'Mail::Box connector via POP3',
-	PREREQ_PM  => \%prereq,
 	LICENSE    => 'perl_5',
 
 	META_MERGE => {
@@ -111,20 +86,26 @@ WriteMakefile
 				url  => "$git.git",
 				web  => $git,
 			},
+			bugtracker => {
+				web  => "$git/issues",
+			},
 			homepage => $homepage,
 			license  => [ 'http//dev.perl.org/licenses/' ],
 		},
 		prereqs => {
+			runtime => {
+				requires => \%requires,
+			},
 			develop => {
 				requires => {
 					'OODoc' => '3.00',
-				}
+				},
 			},
 			test => {
 				requires => {
 					'Test::More' => 1.00,
 					'Test::Pod'  => 1.00,
-				}
+				},
 			},
 		},
 
