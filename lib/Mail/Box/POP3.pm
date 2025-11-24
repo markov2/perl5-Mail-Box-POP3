@@ -35,6 +35,10 @@ using the POP3 protocol.  This class uses Mail::Transport::POP3 to
 hide the transport of information, and focusses solely on the correct
 handling of messages within a POP3 folder.
 
+B<This is a maintenance release for the old interface>.  Read
+F<https://github.com/markov2/perl5-Mail-Box/wiki/> how
+to move towards version 4.
+
 =chapter METHODS
 
 =c_method new %options

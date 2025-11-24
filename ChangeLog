@@ -1,10 +1,15 @@
 
 ===== history of distribution Mail-Box-POP3
 
+#!!! This is the maintenance version of this module.  When you start fresh,
+#!!! go for version 4 (or higher).  On github, this code is branch 'maint3'
+#!!! Convert? See F<https://github.com/markov2/perl5-Mail-Box/wiki/>
+
 version 3.008:
 
 	Changes:
 	- MailBox mid-life upgrade: require Perl minimal version 5.16.
+	- this branch goes into maintenance.
 
 	Improvements:
 	- add .gitignore
