@@ -9,13 +9,11 @@ use base 'Mail::Box::Net';
 use strict;
 use warnings;
 
-use Mail::Box::POP3::Message;
-use Mail::Box::Parser::Perl;
-use Mail::Box::FastScalar;
+use Log::Report  'mail-box-pop3';
 
-use File::Spec;
-use File::Basename;
-use Carp;
+use Mail::Box::POP3::Message ();
+use Mail::Box::Parser::Perl  ();
+use Mail::Box::FastScalar    ();
 
 #--------------------
 =chapter NAME
@@ -34,6 +32,12 @@ communication between the client application and the server is implemented
 using the POP3 protocol.  This class uses Mail::Transport::POP3 to
 hide the transport of information, and focusses solely on the correct
 handling of messages within a POP3 folder.
+
+B<Be aware:>
+This module versions 4.0 and up is not fully compatible with older releases:
+mainly the exception handling has changed.  When you need to upgrade, please
+read F<https://github.com/markov2/perl5-Mail-Box/wiki/>
+B<Version 3 is still maintained> and may see new releases as well.
 
 =chapter METHODS
 
@@ -67,10 +71,10 @@ You may want to specify your own pop-client object.  The object
 which is passed must extend Mail::Transport::POP3.
 
 =option  use_ssl BOOLEAN
-=default use_ssl <false>
+=default use_ssl false
 
 =option  ssl_options HASH
-=default ssl_options <undef>
+=default ssl_options undef
 
 =examples
 

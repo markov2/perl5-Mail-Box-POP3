@@ -9,6 +9,8 @@ use base 'Mail::Box::Net::Message';
 use strict;
 use warnings;
 
+use Log::Report  'mail-box-pop3';
+
 #--------------------
 =chapter NAME
 
@@ -35,11 +37,8 @@ as well.
 
 sub init($)
 {	my ($self, $args) = @_;
-
 	$args->{body_type} ||= 'Mail::Message::Body::Lines';
-
 	$self->SUPER::init($args);
-	$self;
 }
 
 =method size

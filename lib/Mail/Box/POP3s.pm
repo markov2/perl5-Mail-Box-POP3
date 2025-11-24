@@ -9,6 +9,8 @@ use base 'Mail::Box::POP3';
 use strict;
 use warnings;
 
+use Log::Report  'mail-box-pop3';
+
 #--------------------
 =chapter NAME
 

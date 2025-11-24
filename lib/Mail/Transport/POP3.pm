@@ -9,6 +9,8 @@ use base 'Mail::Transport::Receive';
 use strict;
 use warnings;
 
+use Log::Report  'mail-box-pop3';
+
 use IO::Socket       ();
 use IO::Socket::IP   ();
 use IO::Socket::SSL  qw/SSL_VERIFY_NONE/;
@@ -60,10 +62,10 @@ Microsoft Office365 needs C<OAUTH2_SEP>, where other oauth2 implementations
 use C<OAUTH2>.
 
 =option  use_ssl BOOLEAN
-=default use_ssl <false>
+=default use_ssl false
 
 =option  ssl_options HASH
-=default ssl_options <undef>
+=default ssl_options undef
 Unless overruled, C<verify_hostname> will be set to false and
 C<SSL_verify_mode> to C<SSL_VERIFY_NONE}>
 
@@ -126,7 +128,7 @@ sub ids(;@)
 Returns (in scalar context only) the number of messages that are known
 to exist in the mailbox.
 
-=error Cannot get the messages of pop3 via messages()
+=error cannot get all messages of pop3 at once via messages().
 It is not possible to retrieve all messages on a remote POP3 folder
 at once: each shall be taken separately.  The POP3 folder will hide this
 for you.
@@ -135,8 +137,8 @@ for you.
 sub messages()
 {	my $self = shift;
 
-	$self->log(ERROR =>"Cannot get the messages of pop3 via messages()."), return ()
-		if wantarray;
+	wantarray
+		or error __x"cannot get all messages of pop3 at once via messages().";
 
 	$self->{MTP_messages};
 }
@@ -148,8 +150,8 @@ Returns the total number of octets used by the mailbox on the remote server.
 sub folderSize() { $_[0]->{MTP_folder_size} }
 
 =method header $id, [$bodylines]
-Returns a reference to an array which contains the header of the message
-with the specified $id.  undef is returned if something has gone wrong.
+Returns an ARRAY which contains the header of the message with the
+specified $id.  A undef is returned if something has gone wrong.
 
 The optional integer $bodylines specifies the number of lines from the body
 which should be added, by default none.
@@ -161,12 +163,12 @@ which should be added, by default none.
 =cut
 
 sub header($;$)
-{	my ($self, $uidl) = (shift, shift);
-	return unless $uidl;
-	my $bodylines = shift || 0;;
+{	my ($self, $uidl, $bodylines) = @_;
+	$uidl or return;
 
-	my $socket    = $self->socket      or return;
-	my $n         = $self->id2n($uidl) or return;
+	$bodylines //= 0;;
+	my $socket   = $self->socket      or return;
+	my $n        = $self->id2n($uidl) or return;
 
 	$self->sendList($socket, "TOP $n $bodylines$CRLF");
 }
@@ -190,7 +192,7 @@ sub message($;$)
 	my $n       = $self->id2n($uidl) or return;
 	my $message = $self->sendList($socket, "RETR $n$CRLF");
 
-	return unless $message;
+	$msssage or return;
 
 	# Some POP3 servers add a trailing empty line
 	pop @$message if @$message && $message->[-1] =~ m/^[\012\015]*$/;
@@ -209,7 +211,7 @@ undef.
 
 sub messageSize($)
 {	my ($self, $uidl) = @_;
-	return unless $uidl;
+	$uidl or return;
 
 	my $list;
 	unless($list = $self->{MTP_n2length})
@@ -304,7 +306,7 @@ exists.  When the message has been deleted for some reason, undef
 is returned.
 =cut
 
-sub id2n($;$) { shift->{MTP_uidl2n}{shift()} }
+sub id2n($$) { $_[0]->{MTP_uidl2n}{$_[1]} }
 
 #--------------------
 =section Protocol internals
@@ -322,10 +324,9 @@ If the contact to the server was still present, or could be established,
 an IO::Socket::INET object is returned.  Else, undef is returned and
 no further actions should be tried on the object.
 
-=error Cannot re-connect reliably to server which doesn't support UIDL.
+=error cannot re-connect reliably to server which doesn't support UIDL.
 The connection to the remote POP3 was lost, and cannot be re-established
 because the server's protocol implementation lacks the necessary information.
-
 =cut
 
 sub socket()
@@ -335,10 +336,8 @@ sub socket()
 	my $socket = $self->_connection;
 	return $socket if defined $socket;
 
-	if(exists $self->{MTP_nouidl})
-	{	$self->log(ERROR => "Can not re-connect reliably to server which doesn't support UIDL");
-		return;
-	}
+	exists $self->{MTP_nouidl}
+		or error __x"can not re-connect reliably to server which doesn't support UIDL";
 
 	# (Re-)establish the connection
 	$socket = $self->login or return;
@@ -355,14 +354,12 @@ that socket.  Logs an error if either writing to or reading from socket failed.
 This method does B<not> attempt to reconnect or anything: if reading or
 writing the socket fails, something is very definitely wrong.
 
-=error Cannot read POP3 from socket: $!
+=fault cannot read POP3 from socket: $!
 It is not possible to read the success status of the previously given POP3
 command.  Connection lost?
 
-=error Cannot write POP3 to socket: $@
-It is not possible to send a protocol command to the POP3 server.  Connection
-lost?
-
+=error cannot write POP3 to socket: $@
+It is not possible to send a protocol command to the POP3 server.  Connection lost?
 =cut
 
 sub send($$)
@@ -370,12 +367,12 @@ sub send($$)
 	my $socket = shift;
 	my $response;
 
-	if(eval {print $socket @_})
+	if(eval { print $socket @_} )
 	{	$response = <$socket>;
-		defined $response or $self->log(ERROR => "Cannot read POP3 from socket: $!")
+		defined $response or fault __x"cannot read POP3 from socket";
 	}
 	else
-	{	$self->log(ERROR => "Cannot write POP3 to socket: $@");
+	{	error __x"cannot write POP3 to socket: {error}", error => $@;
 	}
 	$response;
 }
@@ -410,10 +407,8 @@ sub DESTROY()
 }
 
 sub _connection()
-{	my $self = shift;
-
-	my $socket = $self->{MTP_socket};
-	defined $socket or return;
+{	my $self   = shift;
+	my $socket = $self->{MTP_socket} // return;
 
 	# Check if we (still) got a connection
 	eval { print $socket "NOOP$CRLF" };
@@ -433,22 +428,21 @@ Establish a new connection to the POP3 server, using username and password.
 No username and/or no password specified for this POP3 folder, although
 these are obligatory parts in the protocol.
 
-=error Cannot connect to $host:$port for POP3: $!
+=fault cannot connect to $service for POP3: $!
 Unsuccessful in connecting to the remote POP3 server.
 
-=error Server at $host:$port does not seem to be talking POP3.
+=error server at $service does not seem to be talking POP3.
 The remote server did not respond to an initial exchange of messages as is
 expected by the POP3 protocol.  The server has probably a different
 service on the specified port.
 
-=error Could not authenticate using any login method.
+=error could not authenticate using any login method.
 No authentication method was explicitly prescribed, so both AUTH and APOP were
 tried.  However, both failed.  There are other authentication methods, which
 are not defined by the main POP3 RFC rfc1939.  These protocols are not
 implemented yet.  Please contribute your implementation.
 
-=error Could not authenticate using '$some' method.
-
+=error could not authenticate using '$type' method.
 The authenication method to get access to the POP3 server did not result in
 a connection.  Maybe you need a different authentication protocol, or your
 username with password are invalid.
@@ -461,10 +455,8 @@ sub login(;$)
 	# Check if we can make a connection
 
 	my ($host, $port, $username, $password) = $self->remoteHost;
-	unless($username && $password)
-	{	$self->log(ERROR => "POP3 requires a username and password.");
-		return;
-	}
+	$username && $password
+		or error __x"POP3 requires a username and password.";
 
 	my $socket;
 	if($self->useSSL)
@@ -475,20 +467,16 @@ sub login(;$)
 	{	$socket  = eval { IO::Socket::IP->new("$host:$port") };
 	}
 
-	unless($socket)
-	{	$self->log(ERROR => "Cannot connect to $host:$port for POP3: $!");
-		return;
-	}
+	$socket
+		or fault __x"cannot connect to {service} for POP3", service => "$host:$port";
 
 	# Check if it looks like a POP server
 
 	my $connected;
 	my $authenticate = $self->{MTP_auth};
 	my $welcome      = <$socket>;
-	unless(_OK $welcome)
-	{	$self->log(ERROR => "Server at $host:$port does not seem to be talking POP3.");
-		return;
-	}
+	_OK $welcome
+		or error __x"server at {service} does not seem to be talking POP3.", service => "$host:$port";
 
 	# Check APOP login if automatic or APOP specifically requested
 	if($authenticate eq 'AUTO' || $authenticate eq 'APOP')
@@ -503,12 +491,10 @@ sub login(;$)
 	# requested.
 	unless($connected)
 	{	if($authenticate eq 'AUTO' || $authenticate eq 'LOGIN')
-		{	my $response = $self->send($socket, "USER $username$CRLF")
-				or return;
+		{	my $response = $self->send($socket, "USER $username$CRLF") or return;
 
 			if(_OK $response)
-			{	my $response2 = $self->send($socket, "PASS $password$CRLF")
-					or return;
+			{	my $response2 = $self->send($socket, "PASS $password$CRLF") or return;
 				$connected = _OK $response2;
 			}
 		}
@@ -523,19 +509,15 @@ sub login(;$)
 		if($authenticate eq 'OAUTH2_SEP')
 		{	# Microsofts way
 			# https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth
-			my $response = $self->send($socket, "AUTH XOAUTH2$CRLF")
-				or return;
+			my $response = $self->send($socket, "AUTH XOAUTH2$CRLF") or return;
 
 			if($response =~ /^\+/)   # Office365 sends + here, not +OK
-			{	my $response2 = $self->send($socket, "$token$CRLF")
-					or return;
+			{	my $response2 = $self->send($socket, "$token$CRLF") or return;
 				$connected = _OK $response2;
 			}
 		}
 		else
-		{	my $response = $self->send($socket, "AUTH XOAUTH2 $token$CRLF")
-				or return;
-
+		{	my $response = $self->send($socket, "AUTH XOAUTH2 $token$CRLF") or return;
 			$connected = _OK $response;
 		}
 	}
@@ -543,9 +525,8 @@ sub login(;$)
 	# If we're still not connected now, we have an error
 	unless($connected)
 	{	$self->log(ERROR => $authenticate eq 'AUTO' ?
-			"Could not authenticate using any login method" :
-			"Could not authenticate using '$authenticate' method");
-		return;
+		  ? (error __x"could not authenticate using any login method.")
+		  : (error __x"could not authenticate using '{type}' method", type => $authenticate);
 	}
 
 	$socket;
