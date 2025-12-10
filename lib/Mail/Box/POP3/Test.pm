@@ -4,7 +4,7 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Box::POP3::Test;
-use base 'Exporter';
+use parent 'Exporter';
 
 use strict;
 use warnings;

@@ -4,7 +4,7 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::POP3;
-use base 'Mail::Transport::Receive';
+use parent 'Mail::Transport::Receive';
 
 use strict;
 use warnings;
@@ -190,9 +190,7 @@ sub message($;$)
 
 	my $socket  = $self->socket      or return;
 	my $n       = $self->id2n($uidl) or return;
-	my $message = $self->sendList($socket, "RETR $n$CRLF");
-
-	$msssage or return;
+	my $message = $self->sendList($socket, "RETR $n$CRLF") or return;
 
 	# Some POP3 servers add a trailing empty line
 	pop @$message if @$message && $message->[-1] =~ m/^[\012\015]*$/;
@@ -524,7 +522,7 @@ sub login(;$)
 
 	# If we're still not connected now, we have an error
 	unless($connected)
-	{	$self->log(ERROR => $authenticate eq 'AUTO' ?
+	{	$authenticate eq 'AUTO'
 		  ? (error __x"could not authenticate using any login method.")
 		  : (error __x"could not authenticate using '{type}' method", type => $authenticate);
 	}

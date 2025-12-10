@@ -4,7 +4,7 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Box::POP3;
-use base 'Mail::Box::Net';
+use parent 'Mail::Box::Net';
 
 use strict;
 use warnings;

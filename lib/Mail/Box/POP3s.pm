@@ -4,7 +4,7 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Box::POP3s;
-use base 'Mail::Box::POP3';
+use parent 'Mail::Box::POP3';
 
 use strict;
 use warnings;
