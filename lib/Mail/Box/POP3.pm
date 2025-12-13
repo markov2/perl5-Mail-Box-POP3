@@ -9,7 +9,7 @@ use parent 'Mail::Box::Net';
 use strict;
 use warnings;
 
-use Log::Report  'mail-box-pop3';
+use Log::Report  'mail-box-pop3', import => [ qw/__x error trace warning/ ];
 
 use Mail::Box::POP3::Message ();
 use Mail::Box::Parser::Perl  ();
@@ -128,7 +128,7 @@ implemented (yet, patches welcome).
 undef is returned, and an error displayed.  However, no complaint is
 given when the $message is undef itself.
 
-=error You cannot write a message to a pop server (yet)
+=error you cannot write a message to a pop server (yet)
 Some extensions to the POP3 protocol do permit writing messages to the server,
 but the standard protocol only implements retreival.  Feel invited to extend our
 implementation with writing.
@@ -138,7 +138,7 @@ implementation with writing.
 sub addMessage($)
 {	my ($self, $message) = @_;
 
-	$self->log(ERROR => "You cannot write a message to a pop server (yet)")
+	error __x"you cannot write a message to a pop server (yet)"
 		if defined $message;
 
 	undef;
@@ -147,13 +147,14 @@ sub addMessage($)
 =method addMessages $messages
 As useless as M<addMessage()>.  The only acceptable call to this method
 is without any message.
+=error you cannot write messages to a pop server (yet)
 =cut
 
 sub addMessages(@)
 {	my $self = shift;
 
 	# error message described in addMessage()
-	$self->log(ERROR => "You cannot write messages to a pop server (yet)")
+	error __x"you cannot write messages to a pop server (yet)"
 		if @_;
 
 	();
@@ -182,12 +183,11 @@ A notice is logged about this.
 =warning POP3 folders cannot be deleted.
 Each user has only one POP3 folder on a server.  This folder is created and
 deleted by the server's administrator only.
-
 =cut
 
 sub delete(@)
 {	my $self = shift;
-	$self->log(WARNING => "POP3 folders cannot be deleted.");
+	warning __x"POP3 folders cannot be deleted.";
 	undef;
 }
 
@@ -226,7 +226,7 @@ Returns the pop client object.  This does not establish the connection.
 =option  ssl_options HASH
 =default ssl_options <from new(ssl_options)>
 
-=error Cannot create POP3 client for $name.
+=error cannot create POP3 client for $name.
 The connection to the POP3 server cannot be established.  You may see
 more, related, error messages about the failure.
 =cut
@@ -248,10 +248,8 @@ sub popClient(%)
 		authenticate => $self->{MBP_auth},
 		use_ssl      => $args{use_ssl} || $self->{MBP_use_ssl},
 		ssl_options  => $args{ssl_options} || $self->{MBP_ssl_opts}
-	);
-
-	$self->log(ERROR => "Cannot create POP3 client for $self.")
-		unless defined $client;
+	)
+		or error __x"cannot create POP3 client for {name}.", name => $self->name;
 
 	$self->{MBP_client} = $client;
 }
@@ -260,18 +258,17 @@ sub readMessages(@)
 {	my ($self, %args) = @_;
 
 	my $pop   = $self->popClient or return;
-	my @log   = $self->logSettings;
 	my $seqnr = 0;
 
 	foreach my $id ($pop->ids)
 	{	my $message = $args{message_type}->new(
-			head      => $args{head_delayed_type}->new(@log),
+			head      => $args{head_delayed_type}->new,
 			unique    => $id,
 			folder    => $self,
 			seqnr     => $seqnr++
 		);
 
-		my $body = $args{body_delayed_type}->new(@log, message => $message);
+		my $body = $args{body_delayed_type}->new(message => $message);
 		$message->storeBody($body);
 		$self->storeMessage($message);
 	}
@@ -281,6 +278,7 @@ sub readMessages(@)
 
 =method getHead $message
 Read the header for the specified message from the remote server.
+=warning message $id disappeared from POP3 server $name.
 =cut
 
 sub getHead($)
@@ -292,7 +290,7 @@ sub getHead($)
 
 	unless(defined $lines)
 	{	$lines = [];
-		$self->log(WARNING  => "Message $uidl disappeared from POP3 server $self.");
+		warning __x"message {id} disappeared from POP3 server {name}.", id => $uidl, name => $self->name;
 	}
 
 	my $text   = join '', @$lines;
@@ -309,22 +307,22 @@ sub getHead($)
 
 	$self->lazyPermitted(0);
 
-	$self->log(PROGRESS => "Loaded head of $uidl.");
+	trace "Loaded head of $uidl.";
 	$head;
 }
 
 =method getHeadAndBody $message
 Read all data for the specified message from the remote server.
 
-=warning Message $uidl on POP3 server $name disappeared.
+=warning Message $id on POP3 server $name disappeared.
 The server indicated the existence of this message before, however it
 has no information about the message anymore.
 
-=error Cannot find head back for $uidl on POP3 server $name.
+=error Cannot find head back for $id on POP3 server $name.
 The server told to have this message, but when asked for its headers, no
 single line was returned.  Did the message get destroyed?
 
-=error Cannot read body for $uidl on POP3 server $name.
+=error Cannot read body for $id on POP3 server $name.
 The message's headers are retrieved from the server, but the body seems
 to be lost.  Did the message get destroyed between reading the header
 and reading the body?
@@ -340,7 +338,7 @@ sub getHeadAndBody($)
 
 	unless(defined $lines)
 	{	$lines = [];
-		$self->log(WARNING  => "Message $uidl disappeared from POP3 server $self.");
+		warning __x"message {id} disappeared from POP3 server {name}.", id => $uidl, name => $self->name;
 	}
 
 	my $parser = Mail::Box::Parser::Perl->new(   # not parseable by C parser
@@ -350,27 +348,27 @@ sub getHeadAndBody($)
 
 	my $head = $message->readHead($parser);
 	unless(defined $head)
-	{	$self->log(ERROR => "Cannot find head back for $uidl on POP3 server $self.");
+	{	error __x"cannot find head back for {id} on POP3 server {name}.", id => $uidl, name => $self->name;
 		$parser->stop;
 		return undef;
 	}
 
 	my $body = $message->readBody($parser, $head);
 	unless(defined $body)
-	{	$self->log(ERROR => "Cannot read body for $uidl on POP3 server $self.");
+	{	error __x"cannot read body for {id} on POP3 server {name}.", id => $uidl, name => $self->name;
 		$parser->stop;
 		return undef;
 	}
 
 	$parser->stop;
 
-	$self->log(PROGRESS => "Loaded message $uidl.");
+	trace "Loaded message $uidl.";
 	($head, $body);
 }
 
 =method writeMessages %options
 
-=error Update of $nr messages ignored for POP3 folder $name.
+=warning update of $count messages ignored for POP3 folder $name.
 The standard POP3 implementation does not support writing from client back
 to the server.  Therefore, modifications may be lost.
 
@@ -380,7 +378,7 @@ sub writeMessages($@)
 {	my ($self, $args) = @_;
 
 	if(my $modifications = grep $_->isModified, @{$args->{messages}})
-	{	$self->log(WARNING => "Update of $modifications messages ignored for POP3 folder $self.");
+	{	warning __x"update of {count} messages ignored for POP3 folder {name}.", count => $modifications, name => $self->name;
 	}
 
 	$self;

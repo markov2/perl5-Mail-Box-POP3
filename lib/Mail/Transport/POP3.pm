@@ -9,7 +9,7 @@ use parent 'Mail::Transport::Receive';
 use strict;
 use warnings;
 
-use Log::Report  'mail-box-pop3';
+use Log::Report  'mail-box-pop3', import => [ qw/error fault __x/ ];
 
 use IO::Socket       ();
 use IO::Socket::IP   ();
@@ -547,7 +547,7 @@ sub status($;$)
 	if($stat !~ m#^\+OK (\d+) (\d+)#)
 	{	delete $self->{MTP_messages};
 		delete $self->{MTP_size};
-		$self->log(ERROR => "POP3 Could not do a STAT");
+		error __x"POP3 Could not do a STAT";
 		return;
 	}
 	$self->{MTP_messages}    = my $nr_msgs = $1;
