@@ -8,6 +8,10 @@
 
 version 4.02:
 
+	Improvements:
+	- remove version of introduction indicators '[3*]', because version 4 is
+	  not backwards compatible anyway.
+
 version 4.01: Sat 13 Dec 12:20:29 CET 2025
 
 	Fixes:

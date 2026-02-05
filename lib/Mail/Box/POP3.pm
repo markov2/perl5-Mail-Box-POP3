@@ -61,9 +61,9 @@ protocol which uses MD5 encryption.  APOP is therefore much better, however
 not always supported by the server.  With AUTO, first APOP is tried and
 if that fails LOGIN.
 
-[3.006] OAUTH* requires the authorization token to be passed as Password.
-Microsoft Office365 needs C<OAUTH2_SEP>, where other oauth2 implementations
-use C<OAUTH2>.
+OAUTH* requires the authorization token to be passed as Password.
+Microsoft Office365 needs C<OAUTH2_SEP>, where other oauth2
+implementations use C<OAUTH2>.
 
 =option  pop_client OBJECT
 =default pop_client undef

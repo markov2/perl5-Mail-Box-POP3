@@ -57,9 +57,9 @@ APOP.  The first sends the username and password in plain text to the server
 to get permission, the latter encrypts this data using MD5.  When AUTO is
 used, first APOP is tried, and then LOGIN.
 
-[3.006] OAUTH* requires the authorization token to be passed as Password.
-Microsoft Office365 needs C<OAUTH2_SEP>, where other oauth2 implementations
-use C<OAUTH2>.
+OAUTH* requires the authorization token to be passed as Password.
+Microsoft Office365 needs C<OAUTH2_SEP>, where other oauth2
+implementations use C<OAUTH2>.
 
 =option  use_ssl BOOLEAN
 =default use_ssl false
