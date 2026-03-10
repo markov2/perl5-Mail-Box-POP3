@@ -137,8 +137,8 @@ for you.
 sub messages()
 {	my $self = shift;
 
-	wantarray
-		or error __x"cannot get all messages of pop3 at once via messages().";
+	error __x"cannot get all messages of pop3 at once via messages()."
+		if wantarray;
 
 	$self->{MTP_messages};
 }
@@ -334,8 +334,8 @@ sub socket()
 	my $socket = $self->_connection;
 	return $socket if defined $socket;
 
-	exists $self->{MTP_nouidl}
-		or error __x"can not re-connect reliably to server which doesn't support UIDL";
+	error __x"can not re-connect reliably to server which doesn't support UIDL"
+		if exists $self->{MTP_nouidl};
 
 	# (Re-)establish the connection
 	$socket = $self->login or return;
