@@ -108,6 +108,11 @@ sub useSSL() { $_[0]->{MTP_ssl} }
 
 sub SSLOptions() { $_[0]->{MTP_ssl_opts} }
 
+=method supportsUIDL
+=cut
+
+sub supportsUIDL() { ! exists $_[0]->{MTP_nouidl} }
+
 #--------------------
 =section Receiving mail
 
@@ -137,7 +142,7 @@ for you.
 sub messages()
 {	my $self = shift;
 
-	wantarray
+	! wantarray
 		or error __x"cannot get all messages of pop3 at once via messages().";
 
 	$self->{MTP_messages};
@@ -196,7 +201,7 @@ sub message($;$)
 	pop @$message if @$message && $message->[-1] =~ m/^[\012\015]*$/;
 
 	$self->{MTP_fetched}{$uidl} = undef   # mark this ID as fetched
-		unless exists $self->{MTP_nouidl};
+		is $self->supportsUIDL;
 
 	$message;
 }
@@ -293,8 +298,7 @@ See also M<deleteFetched()>.
 
 sub fetched(;$)
 {	my $self = shift;
-	return if exists $self->{MTP_nouidl};
-	$self->{MTP_fetched};
+	$self->supportsUIDL ? $self->{MTP_fetched} : undef;
 }
 
 =method id2n $id
@@ -334,8 +338,8 @@ sub socket()
 	my $socket = $self->_connection;
 	return $socket if defined $socket;
 
-	exists $self->{MTP_nouidl}
-		or error __x"can not re-connect reliably to server which doesn't support UIDL";
+	$self->supportsUIDL
+		or error __x"can not re-connect reliably to server which doesn't support UIDL.";
 
 	# (Re-)establish the connection
 	$socket = $self->login or return;
