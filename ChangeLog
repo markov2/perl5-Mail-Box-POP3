@@ -8,6 +8,10 @@
 
 version 4.02:
 
+	Fixes:
+	- rewrite flipped conditions.
+	  github PR #1 [Jitka Plesníková]
+
 	Improvements:
 	- remove version of introduction indicators '[3*]', because version 4 is
 	  not backwards compatible anyway.
