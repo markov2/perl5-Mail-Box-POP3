@@ -106,6 +106,11 @@ sub useSSL() { $_[0]->{MTP_ssl} }
 
 sub SSLOptions() { $_[0]->{MTP_ssl_opts} }
 
+=method supportsUIDL
+=cut
+
+sub supportsUIDL() { ! exists $_[0]->{MTP_nouidl} }
+
 #--------------------
 =section Receiving mail
 
@@ -126,7 +131,7 @@ sub ids(;@)
 Returns (in scalar context only) the number of messages that are known
 to exist in the mailbox.
 
-=error Cannot get the messages of pop3 via messages()
+=error cannot get the messages of pop3 via messages().
 It is not possible to retrieve all messages on a remote POP3 folder
 at once: each shall be taken separately.  The POP3 folder will hide this
 for you.
@@ -135,8 +140,8 @@ for you.
 sub messages()
 {	my $self = shift;
 
-	$self->log(ERROR =>"Cannot get the messages of pop3 via messages()."), return ()
-		if wantarray;
+	! wantarray
+		or error __x"cannot get all messages of pop3 at once via messages().";
 
 	$self->{MTP_messages};
 }
@@ -163,7 +168,7 @@ which should be added, by default none.
 sub header($;$)
 {	my ($self, $uidl) = (shift, shift);
 	return unless $uidl;
-	my $bodylines = shift || 0;;
+	my $bodylines = shift || 0;
 
 	my $socket    = $self->socket      or return;
 	my $n         = $self->id2n($uidl) or return;
@@ -196,7 +201,7 @@ sub message($;$)
 	pop @$message if @$message && $message->[-1] =~ m/^[\012\015]*$/;
 
 	$self->{MTP_fetched}{$uidl} = undef   # mark this ID as fetched
-		unless exists $self->{MTP_nouidl};
+		is $self->supportsUIDL;
 
 	$message;
 }
@@ -293,8 +298,7 @@ See also M<deleteFetched()>.
 
 sub fetched(;$)
 {	my $self = shift;
-	return if exists $self->{MTP_nouidl};
-	$self->{MTP_fetched};
+	$self->supportsUIDL ? $self->{MTP_fetched} : undef;
 }
 
 =method id2n $id
@@ -322,7 +326,7 @@ If the contact to the server was still present, or could be established,
 an IO::Socket::INET object is returned.  Else, undef is returned and
 no further actions should be tried on the object.
 
-=error Cannot re-connect reliably to server which doesn't support UIDL.
+=error cannot re-connect reliably to server which doesn't support UIDL.
 The connection to the remote POP3 was lost, and cannot be re-established
 because the server's protocol implementation lacks the necessary information.
 
@@ -335,17 +339,14 @@ sub socket()
 	my $socket = $self->_connection;
 	return $socket if defined $socket;
 
-	if(exists $self->{MTP_nouidl})
-	{	$self->log(ERROR => "Can not re-connect reliably to server which doesn't support UIDL");
-		return;
-	}
+	$self->supportsUIDL
+		or error __x"cannot re-connect reliably to server which doesn't support UIDL.";
 
 	# (Re-)establish the connection
 	$socket = $self->login or return;
 	$self->status($socket) or return;
 	$self->{MTP_socket} = $socket;
 }
-
 
 =method send $socket, $data
 
