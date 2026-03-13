@@ -201,7 +201,7 @@ sub message($;$)
 	pop @$message if @$message && $message->[-1] =~ m/^[\012\015]*$/;
 
 	$self->{MTP_fetched}{$uidl} = undef   # mark this ID as fetched
-		is $self->supportsUIDL;
+		if $self->supportsUIDL;
 
 	$message;
 }
