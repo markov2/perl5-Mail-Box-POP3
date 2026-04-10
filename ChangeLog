@@ -5,7 +5,9 @@
 #!!! go for version 4 (or higher).  On github, this code is branch 'maint3'
 #!!! Convert? See F<https://github.com/markov2/perl5-Mail-Box/wiki/>
 
-version 3.009:
+version 3.010:
+
+version 3.009: Fri 10 Apr 11:13:58 CEST 2026
 
 	Fixes:
 	- rewrite flipped two conditions.
