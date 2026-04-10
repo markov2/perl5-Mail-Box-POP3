@@ -62,7 +62,7 @@ my %requires = (
 	'Socket'          => 0,
 
 	'Mail::Box'       => '4.02',
-	'Mail::Transport  => '4.01',
+	'Mail::Transport' => '4.01',
 );
 
 WriteMakefile
