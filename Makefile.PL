@@ -63,12 +63,9 @@ my %requires = (
 	'List::Util'      => 0,
 	'Socket'          => 0,
 
-	'Mail::Box::FastScalar'        => '3, <4.0',
-	'Mail::Box::Net'               => '3, <4.0',
-	'Mail::Box::Test'              => '3, <4.0',
-	'Mail::Box::Parser::Perl'      => '3, <4.0',
-	'Mail::Transport::Receive'     => '3, <4.0',
-	'Mail::Reporter'               => '3, <4.0',
+	'Mail::Box'       => '3, <4.0',
+	'Mail::Message'   => '3, <4.0',
+	'Mail::Transport  => '3, <4.0',
 );
 
 WriteMakefile

@@ -7,6 +7,9 @@
 
 version 3.010:
 
+	Improvements:
+	- simpler dependencies on Mail-* modules
+
 version 3.009: Fri 10 Apr 11:13:58 CEST 2026
 
 	Fixes:
